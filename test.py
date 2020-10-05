@@ -73,16 +73,19 @@ def main():
     url2 = "https://xueqiu.com/service/v5/stock/screener/quote/list"
     url3 = "https://xueqiu.com/service/v5/stock/screener/quote/list?page=2&size=30&order=desc&orderby=percent&order_by=percent&market=CN&type=sh_sz&_=1596069689183"
     connetMariaDB()
-    email()
+    warning=retrievingData()
+    email(warning)
+
     #print(getAllStocks(url2))
-   # while True:
-    #    programSleep()
-    #    crawlerDriver(url2)
+    #while True:
+        #programSleep()
+        #crawlerDriver(url2)
+
     #insertDictData(getAllStocks(url2))
     print("done")
 
 
-def email():
+def email(newMessage):
     smtp_server = "smtp.gmail.com"
     port = 587  # For starttls
     sender_email = "frontierstudio99@gmail.com"
@@ -101,7 +104,7 @@ def email():
         server.starttls(context=context)  # Secure the connection
         #server.ehlo()  # Can be omitted
         server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, message)
+        server.sendmail(sender_email, receiver_email, newMessage)
     except Exception as e:
         # Print any error messages to stdout
         print(e)
@@ -120,6 +123,7 @@ def connetMariaDB():
             database="test_database"
 
         )
+        print("Successfully Connect to MariaDB")
     except mariadb.Error as e:
         print(f"Error connecting to MariaDB Platform: {e}")
         sys.exit(1)
@@ -136,6 +140,16 @@ def insertDictData(stock):
             except mariadb.Error as e:
                print(f"Error: {e}")
 
+def retrievingData():
+    cur.execute(
+        "SELECT time,symbol,amplitude,current FROM test_stock_data WHERE time LIKE ? AND amplitude>=?",
+        ("2020-08-21%",10))
+
+    message = "Current Stock Warning List\n\n\n"
+    for (time,symbol,amplitude,current) in cur:
+        newMess = f"Time: {time}, Symbol: {symbol},Amplitude: {amplitude}, Current: {current} \n"
+        message+=newMess
+    return message
 
 def dateAndTime():
 
